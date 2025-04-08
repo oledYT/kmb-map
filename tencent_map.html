@@ -39,6 +39,7 @@
                 console.error("polylineLayer 未初始化！");
                 return;
             }
+            console.log("绘制数据:", latLngArray);
             const path = latLngArray.map(coord => new TMap.LatLng(coord[0], coord[1]));
             window.polylineLayer.setGeometries([{
                 id: "route1",
