@@ -1,56 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <title>路线地图</title>
-  <script charset="utf-8" src="https://map.qq.com/api/gljs?v=1.exp&key=FNMBZ-RKIWB-MQ3UL-NKSLR-H5SFF-JQBNG"></script>
+  <meta charset="UTF-8">
+  <title>Route Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body, #container {
-      width: 100%;
+    html, body, #map {
       height: 100%;
       margin: 0;
       padding: 0;
     }
   </style>
+  <script src="https://map.qq.com/api/gljs?v=1.exp&key=FNMBZ-RKIWB-MQ3UL-NKSLR-H5SFF-JQBNG"></script>
 </head>
 <body>
-  <div id="container"></div>
+  <div id="map"></div>
+
   <script>
-    let map = new TMap.Map("container", {
-      center: new TMap.LatLng(22.3364, 114.1766), // 初始中心点
-      zoom: 13
-    });
+    let map;
+    let polyline;
+    let markers = [];
 
-    let polyline = new TMap.MultiPolyline({
-      map: map,
-      geometries: []
-    });
+    function initMap() {
+      map = new TMap.Map("map", {
+        center: new TMap.LatLng(22.302711, 114.177216), // 香港中間位置
+        zoom: 13
+      });
+      console.log("腾讯地图初始化完成");
+    }
 
-    function drawRoute(coordArray) {
-    if (!Array.isArray(coordArray)) {
-        console.error("drawRoute 参数无效");
+    function drawRoute(latlngArray) {
+      console.log("drawRoute 接收到坐标:", latlngArray);
+
+      if (!Array.isArray(latlngArray) || latlngArray.length === 0) {
+        console.warn("drawRoute: 无效数据");
         return;
-    }
+      }
 
-    const path = coordArray.map(([lat, lng]) => new TMap.LatLng(parseFloat(lat), parseFloat(lng)));
+      // 清除之前的线和标记
+      if (polyline) {
+        polyline.setMap(null);
+      }
+      markers.forEach(marker => marker.setMap(null));
+      markers = [];
 
-    if (window.routeLine) {
-        window.routeLine.setPath(path);
-    } else {
-        window.routeLine = new TMap.Polyline({
-            map: map,
-            path: path,
-            strokeColor: '#3777FF',
-            strokeWeight: 6,
+      // 创建路线线条
+      const path = latlngArray.map(pair => new TMap.LatLng(pair[0], pair[1]));
+
+      polyline = new TMap.MultiPolyline({
+        id: "route_line",
+        map: map,
+        polylines: [{
+          styleId: "style_blue",
+          path: path,
+          active: true
+        }]
+      });
+
+      // 添加样式
+      const styles = {
+        "style_blue": new TMap.PolylineStyle({
+          color: "#3777FF",
+          width: 6
+        })
+      };
+      map.setMultiPolylineStyle(styles);
+
+      // 添加标记点
+      path.forEach((point, index) => {
+        const marker = new TMap.Marker({
+          position: point,
+          map: map,
+          title: `${index + 1}`
         });
+        markers.push(marker);
+      });
+
+      // 适配视图
+      map.setCenter(path[0]);
+      if (path.length >= 2) {
+        map.fitBounds(new TMap.LatLngBounds(path[0], path[path.length - 1]));
+      }
     }
 
-    // 自动调整视野到路线
-    if (path.length > 0) {
-        map.setCenter(path[Math.floor(path.length / 2)]);
-        map.setZoom(13);
-    }
-}
+    window.onload = initMap;
   </script>
 </body>
 </html>
+
