@@ -32,10 +32,7 @@
         return;
     }
 
-    const path = coordArray.map(item => {
-        const [latStr, lngStr] = item.replace("[", "").replace("]", "").split(",");
-        return new TMap.LatLng(parseFloat(latStr), parseFloat(lngStr));
-    });
+    const path = coordArray.map(([lat, lng]) => new TMap.LatLng(parseFloat(lat), parseFloat(lng)));
 
     if (window.routeLine) {
         window.routeLine.setPath(path);
