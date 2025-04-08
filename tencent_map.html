@@ -16,62 +16,39 @@
   <div id="map"></div>
 
   <script>
-    let map = new TMap.Map("map", {
-      center: new TMap.LatLng(22.32066, 114.17076),
-      zoom: 13,
-    });
+            window.initMap = function() {
+            window.map = new TMap.Map("map-container", {
+                center: new TMap.LatLng(22.318125, 114.191562),
+                zoom: 13
+            });
+            window.polylineLayer = new TMap.MultiPolyline({
+                map: window.map,
+                styles: {
+                    "routeStyle": new TMap.PolylineStyle({
+                        color: "#FF0000",
+                        width: 5
+                    })
+                },
+                geometries: []
+            });
+        };
 
-    let polylineLayer;
-    let markerLayer;
+        // 全局定义绘制函数
+        window.drawRoute = function(latLngArray) {
+            if (!window.polylineLayer) {
+                console.error("polylineLayer 未初始化！");
+                return;
+            }
+            const path = latLngArray.map(coord => new TMap.LatLng(coord[0], coord[1]));
+            window.polylineLayer.setGeometries([{
+                id: "route1",
+                styleId: "routeStyle",
+                paths: path
+            }]);
+        };
 
-    function drawRoute(latlngs) {
-      console.log("drawRoute 被调用，路径点：", latlngs);
-
-      const points = latlngs.map(p => new TMap.LatLng(p[0], p[1]));
-
-      // 折线
-      if (polylineLayer) polylineLayer.setGeometries([]);
-      polylineLayer = new TMap.MultiPolyline({
-        map,
-        styles: {
-          'route': new TMap.PolylineStyle({
-            color: '#3777FF',
-            width: 6,
-            borderColor: '#FFF',
-            borderWidth: 2,
-          }),
-        },
-        geometries: [{
-          id: 'route',
-          styleId: 'route',
-          paths: points
-        }]
-      });
-
-      // 所有站点标记
-      if (markerLayer) markerLayer.setGeometries([]);
-      const geometries = points.map((pt, index) => ({
-        id: 'marker_' + index,
-        position: pt,
-        styleId: 'marker'
-      }));
-
-      markerLayer = new TMap.MultiMarker({
-        map,
-        styles: {
-          marker: new TMap.MarkerStyle({
-            width: 20,
-            height: 30,
-            anchor: { x: 10, y: 30 }
-          }),
-        },
-        geometries: geometries
-      });
-
-      if (points.length > 0) {
-        map.setCenter(points[0]);
-      }
-    }
+        // 页面加载后初始化地图
+        window.onload = initMap;
   </script>
 </body>
 </html>
