@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>公交线路地图</title>
+  <title>公交站点标记地图</title>
   <style>
     html, body, #map {
       margin: 0;
@@ -16,40 +16,46 @@
   <div id="map"></div>
 
   <script>
-            window.initMap = function() {
-            window.map = new TMap.Map("map-container", {
-                center: new TMap.LatLng(22.318125, 114.191562),
-                zoom: 13
-            });
-            window.polylineLayer = new TMap.MultiPolyline({
-                map: window.map,
-                styles: {
-                    "routeStyle": new TMap.PolylineStyle({
-                        color: "#FF0000",
-                        width: 5
-                    })
-                },
-                geometries: []
-            });
-        };
+    let map;
 
-        // 全局定义绘制函数
-        window.drawRoute = function(latLngArray) {
-            if (!window.polylineLayer) {
-                console.error("polylineLayer 未初始化！");
-                return;
-            }
-            console.log("绘制数据:", latLngArray);
-            const path = latLngArray.map(coord => new TMap.LatLng(coord[0], coord[1]));
-            window.polylineLayer.setGeometries([{
-                id: "route1",
-                styleId: "routeStyle",
-                paths: path
-            }]);
-        };
+    window.initMap = function () {
+      map = new TMap.Map("map", {
+        center: new TMap.LatLng(22.318125, 114.191562),
+        zoom: 15
+      });
+    };
 
-        // 页面加载后初始化地图
-        window.onload = initMap;
+    // 添加一个标记点
+    window.addMarker = function (latlng) {
+      if (!map) {
+        console.error("地图未初始化！");
+        return;
+      }
+      console.log("添加标记点:", latlng);
+
+      const marker = new TMap.MultiMarker({
+        map: map,
+        styles: {
+          marker: new TMap.MarkerStyle({
+            width: 30,
+            height: 30,
+            anchor: { x: 16, y: 32 },
+          }),
+        },
+        geometries: [
+          {
+            id: "marker1",
+            styleId: "marker",
+            position: new TMap.LatLng(latlng[0], latlng[1])
+          }
+        ]
+      });
+
+      // 将地图中心移动到标记点
+      map.setCenter(new TMap.LatLng(latlng[0], latlng[1]));
+    };
+
+    window.onload = initMap;
   </script>
 </body>
 </html>
