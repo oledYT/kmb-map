@@ -1,63 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>公交站点标记地图</title>
+  <meta charset="utf-8">
+  <title>站点地图</title>
+  <script charset="utf-8" src="https://map.qq.com/api/gljs?v=1.exp&key=FNMBZ-RKIWB-MQ3UL-NKSLR-H5SFF-JQBNG"></script>
   <style>
     html, body, #map {
       margin: 0;
-      height: 100%;
+      padding: 0;
       width: 100%;
+      height: 100%;
     }
   </style>
-  <script src="https://map.qq.com/api/gljs?v=1.exp&key=FNMBZ-RKIWB-MQ3UL-NKSLR-H5SFF-JQBNG"></script>
 </head>
 <body>
   <div id="map"></div>
-
   <script>
     let map;
+    let markerLayer;
 
-    window.initMap = function () {
+    function initMap() {
       map = new TMap.Map("map", {
-        center: new TMap.LatLng(22.316683, 114.180270),
-        zoom: 200
+        center: new TMap.LatLng(22.320, 114.170), // 默认中心点
+        zoom: 15
       });
-    };
 
-    // 添加一个标记点
-    window.addMarker = function (latlng) {
-      if (!map) {
-        console.error("地图未初始化！");
-        return;
-      }
-      console.log("添加标记点:", latlng);
-
-      const marker = new TMap.MultiMarker({
+      markerLayer = new TMap.MultiMarker({
+        id: 'marker-layer',
         map: map,
         styles: {
           marker: new TMap.MarkerStyle({
             width: 30,
-            height: 30,
+            height: 40,
             anchor: { x: 16, y: 32 },
-          }),
+            src: 'https://mapapi.qq.com/web/lbs/javascriptGL/demo/img/markerDefault.png'
+          })
         },
-        geometries: [
-          {
-            id: "marker1",
-            styleId: "marker",
-            position: new TMap.LatLng(22.316683, 114.180270)
-          }
-        ]
+        geometries: []
       });
+    }
 
-      // 将地图中心移动到标记点
-      map.setCenter(new TMap.LatLng(22.316683, 114.180270));
-    };
+    // 更新标记（供 Android 调用）
+    function markStop(lat, lng) {
+      console.log("标记站点：", lat, lng);
+      const position = new TMap.LatLng(lat, lng);
+      markerLayer.setGeometries([{
+        id: 'current-stop',
+        styleId: 'marker',
+        position: position,
+        properties: {
+          title: "当前站点"
+        }
+      }]);
+      map.setCenter(position);
+    }
 
+    // 页面加载初始化
     window.onload = initMap;
+    window.markStop = markStop;
   </script>
 </body>
 </html>
+
 
 
