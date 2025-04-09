@@ -15,46 +15,89 @@
 <body>
   <div id="map"></div>
   <script>
-    let map;
-    let markerLayer;
+  let map;
 
-    window.initMap = function () {
-      map = new TMap.Map("map", {
-        center: new TMap.LatLng(22.318125, 114.191562),
-        zoom: 15
-      });
+  // 腾讯地图需要 GCJ-02，而 KMB 返回的是 WGS84，需要转换
+  function wgs84ToGcj02(lat, lng) {
+    let pi = 3.14159265358979324;
+    let a = 6378245.0;
+    let ee = 0.00669342162296594323;
 
-      markerLayer = new TMap.MultiMarker({
-        id: "marker-layer",
-        map: map,
-        styles: {
-          marker: new TMap.MarkerStyle({
-            width: 25,
-            height: 35,
-            anchor: { x: 16, y: 32 },
-            src: "https://mapapi.qq.com/web/lbs/javascriptGL/demo/img/markerDefault.png"
-          })
-        },
-        geometries: []
-      });
-    };
+    function transformLat(x, y) {
+      let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 
+                0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+      ret += (20.0 * Math.sin(6.0 * x * pi) + 20.0 * Math.sin(2.0 * x * pi)) * 2.0 / 3.0;
+      ret += (20.0 * Math.sin(y * pi) + 40.0 * Math.sin(y / 3.0 * pi)) * 2.0 / 3.0;
+      ret += (160.0 * Math.sin(y / 12.0 * pi) + 320 * Math.sin(y * pi / 30.0)) * 2.0 / 3.0;
+      return ret;
+    }
 
-    // 由 Java 调用，传入坐标数组，例如 [22.31, 114.19]
-    window.addMarker = function (latlng) {
-      console.log("addMarker 被调用: ", latlng);
-      const [lat, lng] = latlng;
-      const position = new TMap.LatLng(lat, lng);
-      map.setCenter(position); // 设置地图中心
-      markerLayer.setGeometries([{
+    function transformLng(x, y) {
+      let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 
+                0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+      ret += (20.0 * Math.sin(6.0 * x * pi) + 20.0 * Math.sin(2.0 * x * pi)) * 2.0 / 3.0;
+      ret += (20.0 * Math.sin(x * pi) + 40.0 * Math.sin(x / 3.0 * pi)) * 2.0 / 3.0;
+      ret += (150.0 * Math.sin(x / 12.0 * pi) + 300.0 * Math.sin(x / 30.0 * pi)) * 2.0 / 3.0;
+      return ret;
+    }
+
+    function outOfChina(lat, lng) {
+      return (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271);
+    }
+
+    if (outOfChina(lat, lng)) return [lat, lng];
+
+    let dLat = transformLat(lng - 105.0, lat - 35.0);
+    let dLng = transformLng(lng - 105.0, lat - 35.0);
+    let radLat = lat / 180.0 * pi;
+    let magic = Math.sin(radLat);
+    magic = 1 - ee * magic * magic;
+    let sqrtMagic = Math.sqrt(magic);
+    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * pi);
+    dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * pi);
+    let mgLat = lat + dLat;
+    let mgLng = lng + dLng;
+    return [mgLat, mgLng];
+  }
+
+  // 初始化地图
+  function initMap() {
+    map = new TMap.Map("map", {
+      center: new TMap.LatLng(22.318125, 114.191562),
+      zoom: 15
+    });
+  }
+
+  // 添加标记（从 Android 调用）
+  function addMarker(lat, lng) {
+    const [gcjLat, gcjLng] = wgs84ToGcj02(lat, lng);
+    const marker = new TMap.MultiMarker({
+      map,
+      styles: {
+        marker: new TMap.MarkerStyle({
+          width: 30,
+          height: 30,
+          anchor: { x: 16, y: 32 },
+          src: 'https://mapapi.qq.com/web/lbs/javascriptGL/demo/img/markerDefault.png'
+        })
+      },
+      geometries: [{
         id: "marker",
         styleId: "marker",
-        position: position,
-        properties: { title: "当前站点" }
-      }]);
-    };
+        position: new TMap.LatLng(gcjLat, gcjLng),
+        properties: {
+          title: "站点"
+        }
+      }]
+    });
 
-    window.onload = initMap;
-  </script>
+    // 居中地图
+    map.setCenter(new TMap.LatLng(gcjLat, gcjLng));
+  }
+
+  window.onload = initMap;
+  window.addMarker = addMarker;
+</script>
 </body>
 </html>
 
