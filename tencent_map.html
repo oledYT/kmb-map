@@ -41,7 +41,7 @@
     }
 
     // 更新标记（供 Android 调用）
-    function markStop(lat, lng) {
+    function addMarker(lat, lng) {
       console.log("标记站点：", lat, lng);
       const position = new TMap.LatLng(lat, lng);
       markerLayer.setGeometries([{
