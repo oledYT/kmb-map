@@ -21,7 +21,7 @@
 
     function initMap() {
       map = new TMap.Map("map", {
-        center: new TMap.LatLng(22.320, 114.170), // 默认中心点
+        center: new TMap.LatLng(22.316683, 114.180270), // 默认中心点
         zoom: 15
       });
 
@@ -42,8 +42,8 @@
 
     // 更新标记（供 Android 调用）
     function addMarker(lat, lng) {
-      console.log("标记站点：", lat, lng);
-      const position = new TMap.LatLng(lat, lng);
+      console.log("标记站点：", 22.316683, 114.180270);
+      const position = new TMap.LatLng(22.316683, 114.180270);
       markerLayer.setGeometries([{
         id: 'current-stop',
         styleId: 'marker',
